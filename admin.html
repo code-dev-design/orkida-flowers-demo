@@ -96,7 +96,7 @@ tbody tr:hover{background:#fcf9fa}
 td img{width:48px;height:48px;border-radius:10px;object-fit:cover}
 .st{display:inline-block;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap}
 .st.new{background:#e8f0fd;color:var(--blue)}.st.preparing{background:#fff4e0;color:var(--warn)}
-.st.delivering{background:#f2e8fd;color:#8a4fd1}.st.done{background:#e6f6ec;color:var(--ok)}.st.cancelled{background:#fde8e8;color:#c53030}
+.st.ready{background:#f2e8fd;color:#8a4fd1}.st.done{background:#e6f6ec;color:var(--ok)}.st.cancelled{background:#fde8e8;color:#c53030}
 select.st-sel{padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:#fff}
 .price-in{width:90px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;text-align:center;font-weight:700}
 .price-in:focus{outline:none;border-color:var(--pink);background:var(--pink-l)}
@@ -215,7 +215,7 @@ new MutationObserver(function(ms){ms.forEach(function(m){if(m.type==='attributes
 
 <script>
 /* Orkida Flowers — Demo data layer (localStorage) */
-const DB_KEY = 'orkida_demo_v2';
+const DB_KEY = 'orkida_demo_v3';
 
 const DEFAULT_DB = {
   settings: {
@@ -224,12 +224,7 @@ const DEFAULT_DB = {
     whatsapp: '963938722619',
     phone: '+963 938 722 619',
     instagram: 'orkida__flowers',
-    announcement: '🌸 توصيل نفس اليوم داخل المدينة — اطلب قبل الساعة 6 مساءً',
-    deliveryZones: [
-      { id: 1, name: 'وسط المدينة', fee: 3 },
-      { id: 2, name: 'الأحياء القريبة', fee: 5 },
-      { id: 3, name: 'الضواحي', fee: 8 }
-    ]
+    announcement: '🌸 اطلب بوكيهك أونلاين وخصّصه على ذوقك'
   },
   categories: [
     { id: 'bouquets', name: 'بوكيهات', icon: '💐' },
@@ -253,12 +248,12 @@ const DEFAULT_DB = {
   ],
   offers: [
     { id: 1, title: 'خصم 15% على البوكيهات', code: 'ORKIDA15', percent: 15, active: true },
-    { id: 2, title: 'توصيل مجاني للطلبات فوق 150', code: 'FREESHIP', percent: 0, active: true }
+    { id: 2, title: 'خصم 10% لعيد الحب', code: 'LOVE10', percent: 10, active: false }
   ],
   reviews: [
-    { id: 1, pid: 1, name: 'رهف', stars: 5, text: 'البوكيه أحلى من الصور بكتير، والتوصيل كان عالوقت 😍', approved: true },
+    { id: 1, pid: 1, name: 'رهف', stars: 5, text: 'البوكيه أحلى من الصور بكتير، والتغليف فخم 😍', approved: true },
     { id: 2, pid: 3, name: 'محمد', stars: 5, text: 'هدية خطيبتي كانت مثالية، شكراً أوركيدا', approved: true },
-    { id: 3, pid: 2, name: 'لين', stars: 5, text: 'تنسيق القلب فخم جداً والورد طازة', approved: true },
+    { id: 3, pid: 2, name: 'لين', stars: 5, text: 'تنسيق القلب فخم جداً ومرتب', approved: true },
     { id: 4, pid: 5, name: 'أحمد', stars: 4, text: 'حلو كتير، بس بتمنى يكون في خيارات ألوان أكتر', approved: false }
   ],
   orders: []
@@ -267,7 +262,7 @@ const DEFAULT_DB = {
 /* Generate sample orders over last 30 days for reports */
 function seedOrders(db) {
   const names = ['سارة', 'علي', 'نور', 'خالد', 'ريم', 'يوسف', 'جود', 'مازن', 'هبة', 'كريم', 'لمى', 'عمر'];
-  const statuses = ['new', 'preparing', 'delivering', 'done', 'done', 'done'];
+  const statuses = ['new', 'preparing', 'ready', 'done', 'done', 'done'];
   let seed = 7; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
   const orders = []; let id = 1001;
   const now = new Date();
@@ -276,13 +271,12 @@ function seedOrders(db) {
     for (let k = 0; k < n; k++) {
       const p = db.products[Math.floor(rnd() * 10)];
       const qty = rnd() > 0.85 ? 2 : 1;
-      const zone = db.settings.deliveryZones[Math.floor(rnd() * 3)];
       const date = new Date(now); date.setDate(now.getDate() - d); date.setHours(10 + Math.floor(rnd() * 10), Math.floor(rnd() * 60));
       orders.push({
         id: id++, customer: names[Math.floor(rnd() * names.length)], phone: '09' + Math.floor(10000000 + rnd() * 89999999),
-        zone: zone.name, deliveryFee: zone.fee, items: [{ pid: p.id, name: p.name, price: p.price, qty }],
-        total: p.price * qty + zone.fee, date: date.toISOString(),
-        status: d === 0 ? statuses[Math.floor(rnd() * 3)] : (d === 1 && k === 0 ? 'delivering' : 'done'),
+        items: [{ pid: p.id, name: p.name, price: p.price, qty }],
+        total: p.price * qty, date: date.toISOString(),
+        status: d === 0 ? statuses[Math.floor(rnd() * 3)] : (d === 1 && k === 0 ? 'ready' : 'done'),
         payment: rnd() > 0.6 ? 'إلكتروني' : 'عند الاستلام', note: ''
       });
     }
@@ -319,7 +313,7 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const m = v => money(v, db);
 const save = (msg) => { Store.save(db); if (msg) toast(msg); updatePills(); };
-const STATUS = { new: 'جديد', preparing: 'قيد التجهيز', delivering: 'قيد التوصيل', done: 'تم التسليم', cancelled: 'ملغي' };
+const STATUS = { new: 'جديد', preparing: 'قيد التجهيز', ready: 'جاهز', done: 'تم التسليم', cancelled: 'ملغي' };
 const dayKey = d => new Date(d).toISOString().slice(0, 10);
 const fmtDate = d => new Date(d).toLocaleString('ar-SY-u-nu-latn', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 const catName = id => db.categories.find(c => c.id === id)?.name || id;
@@ -421,9 +415,9 @@ function dash() {
 /* ---------- Orders ---------- */
 function ordersTable(list, compact) {
   if (!list.length) return '<div class="empty">ما في طلبات</div>';
-  return `<div class="tbl-wrap"><table${compact ? ' style="min-width:0"' : ''}><thead><tr><th>#</th><th>الزبون</th>${compact ? '' : '<th>المنطقة</th><th>الدفع</th>'}<th>التاريخ</th><th>المبلغ</th><th>الحالة</th><th></th></tr></thead><tbody>
+  return `<div class="tbl-wrap"><table${compact ? ' style="min-width:0"' : ''}><thead><tr><th>#</th><th>الزبون</th>${compact ? '' : '<th>الدفع</th>'}<th>التاريخ</th><th>المبلغ</th><th>الحالة</th><th></th></tr></thead><tbody>
     ${list.map(o => `<tr><td><b>#${o.id}</b></td><td>${esc(o.customer)}<div class="muted" dir="ltr" style="text-align:right">${esc(o.phone)}</div></td>
-      ${compact ? '' : `<td>${esc(o.zone)}</td><td>${esc(o.payment)}</td>`}
+      ${compact ? '' : `<td>${esc(o.payment)}</td>`}
       <td class="muted">${fmtDate(o.date)}</td><td><b>${m(o.total)}</b></td>
       <td>${compact ? `<span class="st ${o.status}">${STATUS[o.status]}</span>` : `<select class="st-sel" onchange="setStatus(${o.id},this.value)">${Object.entries(STATUS).map(([k, v]) => `<option value="${k}" ${o.status === k ? 'selected' : ''}>${v}</option>`).join('')}</select>`}</td>
       <td><button class="btn btn-g btn-sm" onclick="viewOrder(${o.id})">تفاصيل</button></td></tr>`).join('')}
@@ -447,11 +441,10 @@ function viewOrder(id) {
   openModal(`<h3>طلب #${o.id} <button onclick="closeModal()">✕</button></h3>
     <div class="f">
       <div class="two"><div><span class="muted">الزبون</span><br><b>${esc(o.customer)}</b></div><div><span class="muted">الموبايل</span><br><b dir="ltr">${esc(o.phone)}</b></div></div>
-      <div class="two"><div><span class="muted">المنطقة</span><br><b>${esc(o.zone)}</b></div><div><span class="muted">العنوان</span><br><b>${esc(o.address || '—')}</b></div></div>
+      ${o.notes ? `<div><span class="muted">ملاحظات</span><br><b>${esc(o.notes)}</b></div>` : ''}
       <div class="two"><div><span class="muted">تاريخ الطلب</span><br><b>${fmtDate(o.date)}</b></div><div><span class="muted">الدفع</span><br><b>${esc(o.payment)}</b></div></div>
       <table style="min-width:0"><thead><tr><th>المنتج</th><th>الكمية</th><th>السعر</th></tr></thead><tbody>
         ${o.items.map(i => `<tr><td>${esc(i.name)}${i.note ? `<div class="muted">✍️ ${esc(i.note)}</div>` : ''}</td><td>${i.qty}</td><td>${m(i.price * i.qty)}</td></tr>`).join('')}
-        <tr><td colspan="2">التوصيل</td><td>${m(o.deliveryFee)}</td></tr>
         ${o.discount ? `<tr><td colspan="2">خصم (${esc(o.coupon)})</td><td>−${m(o.discount)}</td></tr>` : ''}
         <tr><td colspan="2"><b>الإجمالي</b></td><td><b style="color:var(--pink)">${m(o.total)}</b></td></tr></tbody></table>
       ${o.note ? `<div style="background:var(--pink-l);padding:12px;border-radius:12px">💌 كرت الإهداء: ${esc(o.note)}</div>` : ''}
@@ -563,8 +556,7 @@ function reports() {
   const byCat = {}; mo.orders.forEach(o => o.items.forEach(i => { const c = db.products.find(p => p.id === i.pid)?.cat || 'other'; byCat[c] = (byCat[c] || 0) + i.price * i.qty; }));
   const catTotal = Object.values(byCat).reduce((a, b) => a + b, 0) || 1;
   const pay = {}; mo.orders.forEach(o => pay[o.payment] = (pay[o.payment] || 0) + 1);
-  const zones = {}; mo.orders.forEach(o => zones[o.zone] = (zones[o.zone] || 0) + 1);
-  const delivery = mo.orders.reduce((s, o) => s + o.deliveryFee, 0);
+  const custs = new Set(mo.orders.map(o => o.phone)).size;
   const avg = mo.count ? Math.round(mo.revenue / mo.count) : 0;
   const sales = productSales(mo.orders); const maxQ = sales[0]?.qty || 1;
   const weeks = [0, 1, 2, 3].map(i => sumRange(7, i * 7)).reverse(); const maxW = Math.max(...weeks.map(x => x.revenue), 1);
@@ -574,7 +566,7 @@ function reports() {
       <div class="kpi"><span>إجمالي الدخل الشهري</span><b>${m(mo.revenue)}</b></div>
       <div class="kpi"><span>عدد الطلبات</span><b>${mo.count}</b></div>
       <div class="kpi"><span>متوسط قيمة الطلب</span><b>${m(avg)}</b></div>
-      <div class="kpi"><span>دخل التوصيل</span><b>${m(delivery)}</b></div>
+      <div class="kpi"><span>عدد الزبائن</span><b>${custs}</b></div>
     </div>
     <div class="row">
       <div class="panel"><h3>الدخل الأسبوعي <small>آخر 4 أسابيع</small></h3><div class="rank">
@@ -589,13 +581,12 @@ function reports() {
         ${sales.map(x => `<div class="it"><img src="${esc(x.p.img)}" alt=""><div class="nm"><b>${esc(x.p.name)}</b><div class="bar"><i style="width:${x.qty / maxQ * 100}%"></i></div></div><span class="v">${x.qty} • ${m(x.rev)}</span></div>`).join('')}
       </div></div>
       <div class="panel"><h3>طرق الدفع</h3><div class="rank">${Object.entries(pay).map(([k, v]) => `<div class="it"><div class="nm"><b>${esc(k)}</b><div class="bar"><i style="width:${v / mo.count * 100}%"></i></div></div><span class="v">${v}</span></div>`).join('')}</div>
-        <h3 style="margin-top:22px">الطلبات حسب المنطقة</h3><div class="rank">${Object.entries(zones).map(([k, v]) => `<div class="it"><div class="nm"><b>${esc(k)}</b><div class="bar"><i style="width:${v / mo.count * 100}%"></i></div></div><span class="v">${v}</span></div>`).join('')}</div>
         <p class="muted" style="margin-top:16px">هذا الأسبوع: ${w.count} طلب بقيمة ${m(w.revenue)}</p></div>
     </div>`;
 }
 function exportCSV() {
-  const rows = [['رقم الطلب', 'الزبون', 'الموبايل', 'المنطقة', 'المنتجات', 'الإجمالي', 'الدفع', 'الحالة', 'التاريخ']]
-    .concat(db.orders.map(o => [o.id, o.customer, o.phone, o.zone, o.items.map(i => `${i.name} x${i.qty}`).join(' | '), o.total, o.payment, STATUS[o.status], new Date(o.date).toLocaleString('en-GB')]));
+  const rows = [['رقم الطلب', 'الزبون', 'الموبايل', 'المنتجات', 'الإجمالي', 'الدفع', 'الحالة', 'التاريخ']]
+    .concat(db.orders.map(o => [o.id, o.customer, o.phone, o.items.map(i => `${i.name} x${i.qty}`).join(' | '), o.total, o.payment, STATUS[o.status], new Date(o.date).toLocaleString('en-GB')]));
   const csv = '﻿' + rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })); a.download = 'orkida-orders.csv'; a.click();
 }
@@ -603,10 +594,8 @@ function exportCSV() {
 /* ---------- Settings ---------- */
 function settings() {
   const s = db.settings;
-  $('#view').innerHTML = `<div class="top"><div><h2>الإعدادات</h2><p>معلومات المتجر وأجور التوصيل</p></div></div>
-    <div class="row">
-      <div class="panel"><h3>أجور التوصيل حسب المنطقة <button class="btn btn-g btn-sm" onclick="addZone()">+ منطقة</button></h3>
-        <div class="f">${s.deliveryZones.map(z => `<div class="inline"><input value="${esc(z.name)}" onchange="setZone(${z.id},'name',this.value)"><input class="price-in" type="number" value="${z.fee}" onchange="setZone(${z.id},'fee',+this.value)"><button class="btn btn-d btn-sm" onclick="delZone(${z.id})">✕</button></div>`).join('')}</div></div>
+  $('#view').innerHTML = `<div class="top"><div><h2>الإعدادات</h2><p>معلومات المتجر والأقسام</p></div></div>
+    <div class="row" style="grid-template-columns:1fr">
       <div class="panel"><h3>معلومات المتجر</h3><form class="f" id="sf">
         <label>اسم المتجر<input id="sN" value="${esc(s.storeName)}"></label>
         <div class="two"><label>رقم واتساب الطلبات<input id="sW" dir="ltr" value="${esc(s.whatsapp)}"></label><label>رمز العملة<input id="sC" value="${esc(s.currency)}"></label></div>
@@ -616,9 +605,6 @@ function settings() {
     <div class="panel"><h3>الأقسام</h3><div class="f">${db.categories.map(c => `<div class="inline"><input style="width:70px;text-align:center" value="${c.icon}" onchange="setCat('${c.id}','icon',this.value)"><input value="${esc(c.name)}" onchange="setCat('${c.id}','name',this.value)"><span class="muted" style="white-space:nowrap">${db.products.filter(p => p.cat === c.id).length} منتج</span></div>`).join('')}</div></div>`;
   $('#sf').onsubmit = e => { e.preventDefault(); Object.assign(s, { storeName: $('#sN').value, whatsapp: $('#sW').value.replace(/\D/g, ''), currency: $('#sC').value, phone: $('#sP').value, instagram: $('#sI').value }); save('تم حفظ الإعدادات ✓'); };
 }
-function setZone(id, k, v) { db.settings.deliveryZones.find(z => z.id === id)[k] = v; save('تم التحديث ✓'); }
-function addZone() { db.settings.deliveryZones.push({ id: Date.now(), name: 'منطقة جديدة', fee: 5 }); save(); settings(); }
-function delZone(id) { if (db.settings.deliveryZones.length < 2) return toast('لازم تبقى منطقة وحدة على الأقل'); db.settings.deliveryZones = db.settings.deliveryZones.filter(z => z.id !== id); save('تم الحذف'); settings(); }
 function setCat(id, k, v) { db.categories.find(c => c.id === id)[k] = v; save('تم التحديث ✓'); }
 
 /* ---------- Boot ---------- */
